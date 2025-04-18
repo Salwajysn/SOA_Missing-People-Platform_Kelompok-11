@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Language" content="id">
@@ -50,9 +50,15 @@
         </div>
       </aside>
 
-      <!-- KIRI: KONTEN BERITA -->
+      <!-- KANAN: KONTEN BERITA -->
       <div class="container">
         <h1>Berita Terbaru</h1>
+
+        <!-- Tombol Add News -->
+        <div style="text-align: right;">
+          <button class="add-news-btn" onclick="openAddNewsModal()">+ Tambah Berita</button>
+        </div>
+        
         <hr style="margin: 10px 0 30px; border: none; border-top: 1px solid #ccc;" />
 
         <!-- SECTION SEMUA -->
@@ -68,6 +74,23 @@
     </div>
   </main>
 
+<!-- Modal Add News -->
+<div id="addNewsModal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeAddNewsModal()">&times;</span>
+    <h2>Tambah Berita</h2>
+    <input type="text" id="new-title" class="modal-input" placeholder="Judul Berita">
+    <input type="text" id="new-author" class="modal-input" placeholder="Penulis">
+    <select id="new-category" class="modal-input">
+      <option value="missing">Missing</option>
+      <option value="found">Found</option>
+    </select>
+    <input type="file" id="new-image" class="modal-input" accept="image/*"> <!-- Input untuk memilih gambar -->
+    <textarea id="new-description" class="modal-textarea" placeholder="Deskripsi berita"></textarea>
+    <button onclick="submitNewNews()" class="add-news-btn">+ Tambah</button>
+  </div>
+</div>  
+  
   <script src="./js/News-JS.js"></script>
 </body>
 </html>
