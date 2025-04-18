@@ -15,6 +15,79 @@ router.get('/', async (req, res) => {
   }
 });
 
+// API COMPLEX
+// GET berita terbaru (http://localhost:5000/news/latest?limit=5)
+router.get('/latest', async (req, res) => {
+  const { limit = 5 } = req.query;  // Default limit 5 berita
+
+  try {
+    const query = `SELECT * FROM news ORDER BY created_at DESC LIMIT ?`;
+    const [results] = await db.execute(query, [limit]);
+
+    res.json(results);
+  } catch (error) {
+    console.error('Error fetching latest news:', error);
+    res.status(500).json({ error: 'Error fetching latest news' });
+  }
+});
+
+// API COMPLEX
+// GET berita berdasarkan kategori (http://localhost:5000/news/category/missing) 
+router.get('/category/:category', async (req, res) => {
+  const { category } = req.params;  // Mengambil kategori dari parameter URL
+
+  try {
+    // Query untuk mengambil berita berdasarkan kategori
+    const query = `SELECT * FROM news WHERE category = ?`;
+    const [results] = await db.execute(query, [category]);
+
+    // Jika tidak ada berita ditemukan, beri respons 404
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'No news found for this category' });
+    }
+
+    // Jika ada berita, kirimkan hasilnya
+    res.json(results);
+  } catch (error) {
+    console.error('Error fetching news by category:', error);
+    res.status(500).json({ error: 'Error fetching news by category' });
+  }
+});
+
+// API COMPLEX
+// GET berita berdasarkan penulis (http://localhost:5000/news/author/:author)
+router.get('/author/:author', async (req, res) => {
+  const { author } = req.params;
+
+  try {
+    const query = `SELECT * FROM news WHERE author = ?`;
+    const [results] = await db.execute(query, [author]);
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'No news found for this author' });
+    }
+
+    res.json(results);
+  } catch (error) {
+    console.error('Error fetching news by author:', error);
+    res.status(500).json({ error: 'Error fetching news by author' });
+  }
+});
+
+// API COMPLEX
+// GET jumlah total berita
+router.get('/total', async (req, res) => {
+  try {
+    const query = `SELECT COUNT(*) AS total_news FROM news`;
+    const [results] = await db.execute(query);
+
+    res.json({ total_news: results[0].total_news });
+  } catch (error) {
+    console.error('Error fetching total news count:', error);
+    res.status(500).json({ error: 'Error fetching total news count' });
+  }
+});
+
 // GET berita berdasarkan ID
 router.get('/:id', async (req, res) => {
   try {
