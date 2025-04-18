@@ -10,7 +10,15 @@ const client = require('../client');
 // Get all missing persons
 router.get('/', async (req, res) => {
     try {
+      const cachedData = await client.get('missing_persons:all');
+
+      if (cachedData) {
+        return res.json(JSON.parse(cachedData));
+      }
+
       const [rows] = await db.query('SELECT * FROM missing_persons');
+      await client.setEx('missing_persons:all', 3600, JSON.stringify(rows));
+
       res.json(rows);
     } catch (error) {
       console.error('Error fetching missing persons:', error.message);
@@ -21,11 +29,15 @@ router.get('/', async (req, res) => {
 // Get missing person by ID
 router.get('/:id', (req, res) => {
     const { id } = req.params;
-    db.query('SELECT * FROM missing_persons WHERE missing_id = ?', [id], (err, result) => {
+
+    const cachedData = client.get(`missing_persons:${id}`);
+
+    db.query('SELECT * FROM missing_persons WHERE missing_id = ?', [id], async(err, result) => {
         if (err) return res.status(500).json({ error: 'Database query error', details: err });
         if (result.length === 0) {
             return res.status(404).json({ error: "Missing person not found" });
         }
+        await client.setEx(`missing_persons:${id}`, 3600, JSON.stringify(result[0]));
         res.json(result[0]);
     });
 });
@@ -48,6 +60,11 @@ router.post('/', verifyToken, uploadMissing.single('photo_url'), async (req, res
       (user_id, full_name, age, gender, height, weight, last_seen_location, last_seen_date, photo_url)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [userId, full_name, age, gender, height, weight, last_seen_location, last_seen_date, photoPath]);
+
+
+    // Clear cache
+    await client.del(`missing_persons:${userId}`);
+    await client.del('missing_persons:all');
 
     res.status(201).json({ message: 'Missing person report submitted successfully.' });
   } catch (err) {
@@ -98,12 +115,16 @@ router.put('/:id', (req, res) => {
         db.query(
             'UPDATE missing_persons SET full_name=?, age=?, gender=?, height=?, weight=?, last_seen_location=?, last_seen_date=?, photo_url=?, status=? WHERE missing_id=?',
             [updatedFullName, updatedAge, updatedGender, updateHeight, updateWeight, updatedLastSeenLocation, updatedLastSeenDate, updatedPhotoUrl, updatedStatus, id],
-            (err, result) => {
+            async (err, result) => {
                 if (err) return res.status(500).json({ error: 'Database update error', details: err });
 
                 if (result.affectedRows === 0) {
                     return res.status(400).json({ error: 'No changes made to the missing person' });
                 }
+
+                // Clear cache
+                await client.del(`missing_persons:${userId}`);
+                await client.del('missing_persons:all');
 
                 res.json({ message: 'Missing person updated successfully' });
             }
@@ -122,8 +143,13 @@ router.delete('/:id', (req, res) => {
             return res.status(404).json({ error: 'Missing person not found' });
         }
 
-        db.query('DELETE FROM missing_persons WHERE missing_id = ?', [id], (err, result) => {
+        db.query('DELETE FROM missing_persons WHERE missing_id = ?', [id], async (err, result) => {
             if (err) return res.status(500).json({ error: 'Database deletion error', details: err });
+
+            // Clear cache
+            await client.del(`missing_persons:${userId}`);
+            await client.del('missing_persons:all');
+
             res.json({ message: 'Missing person deleted successfully' });
         });
     });
@@ -139,7 +165,7 @@ router.get('/logs/:id', async (req, res) => {
         return res.json(JSON.parse(cachedData));
       }
   
-      const [results] = await db.query('SELECT missing_id, full_name, status, created_at FROM missing_persons');
+      const [results] = await db.query('SELECT missing_id, full_name, status, created_at FROM missing_persons WHERE user_id = ?', [id]);
   
       if (results.length === 0) {
         return res.json({ message: "You haven't reported any missing person yet." });

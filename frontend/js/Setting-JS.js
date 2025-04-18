@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (!token) {
         alert('Anda harus login untuk mengakses halaman ini.');
         window.location.href = 'login.html';
@@ -27,7 +27,7 @@ function fetchUserData(token) {
 
 document.getElementById('settingsForm').addEventListener('submit', function(event) {
     event.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
 
     const updatedData = {
         name: document.getElementById('name').value,

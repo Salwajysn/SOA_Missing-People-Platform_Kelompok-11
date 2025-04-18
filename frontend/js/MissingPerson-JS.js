@@ -35,8 +35,8 @@ async function fetchMissingPersons() {
 }
 
 // Cek apakah user sudah login (token & nama tersedia)
-const token = localStorage.getItem('token');
-const name = localStorage.getItem('name');
+const token = sessionStorage.getItem('token');
+const name = sessionStorage.getItem('name');
 const userCard = document.getElementById('userCard');
 
 if (token && name) {
@@ -58,8 +58,8 @@ userCard.innerHTML = `
 
 // Fungsi Logout
 function logout() {
-localStorage.removeItem('token');
-localStorage.removeItem('name');
+sessionStorage.removeItem('token');
+sessionStorage.removeItem('name');
 window.location.reload();
 }
 

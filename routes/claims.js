@@ -5,8 +5,14 @@ const client = require('../client');
 
 // Get all claims
 router.get('/', (req, res) => {
-    db.query('SELECT * FROM claims', (err, results) => {
+    const cachedData = client.get('claims:all');
+    if (cachedData) {
+        return res.json(JSON.parse(cachedData));
+    }
+
+    db.query('SELECT * FROM claims', async(err, results) => {
         if (err) return res.status(500).json({ error: 'Database query error', details: err });
+        await client.setEx('claims:all', 3600, JSON.stringify(results));
         res.json(results);
     });
 });
@@ -14,11 +20,16 @@ router.get('/', (req, res) => {
 // Get claim by ID
 router.get('/:id', (req, res) => {
     const { id } = req.params;
-    db.query('SELECT * FROM claims WHERE claim_id = ?', [id], (err, result) => {
+    const cachedData = client.get(`claims:${id}`);
+    if (cachedData) {
+        return res.json(JSON.parse(cachedData));
+    }
+    db.query('SELECT * FROM claims WHERE claim_id = ?', [id], async(err, result) => {
         if (err) return res.status(500).json({ error: 'Database query error', details: err });
         if (result.length === 0) {
             return res.status(404).json({ error: "Claim not found" });
         }
+        await client.setEx(`claims:${id}`, 3600, JSON.stringify(result[0]));
         res.json(result[0]);
     });
 });
@@ -34,8 +45,11 @@ router.post('/', (req, res) => {
     db.query(
         'INSERT INTO claims (user_id, found_id, relationship, evidence_url, found_location, status) VALUES (?, ?, ?, ?, ?, ?)',
         [user_id, found_id, relationship, evidence_url, found_location, status],
-        (err, result) => {
+        async(err, result) => {
             if (err) return res.status(500).json({ error: 'Database insertion error', details: err });
+            // clear cache
+            await client.del('claims:all');
+            await client.del(`claims:${user_id}`);
             res.json({ message: 'Claim created successfully', claimId: result.insertId });
         }
     );
@@ -74,12 +88,15 @@ router.put('/:id', (req, res) => {
         db.query(
             'UPDATE claims SET relationship=?, evidence_url=?, found_location=?, status=? WHERE claim_id=?',
             [updatedRelationship, updatedEvidenceUrl, updatedFoundLocation, updatedStatus, id],
-            (err, result) => {
+            async(err, result) => {
                 if (err) return res.status(500).json({ error: 'Database update error', details: err });
 
                 if (result.affectedRows === 0) {
                     return res.status(400).json({ error: 'No changes made to the claim' });
                 }
+                // clear cache
+                await client.del('claims:all');
+                await client.del(`claims:${id}`);
 
                 res.json({ message: 'Claim updated successfully' });
             }
@@ -98,8 +115,11 @@ router.delete('/:id', (req, res) => {
             return res.status(404).json({ error: 'Claim not found' });
         }
 
-        db.query('DELETE FROM claims WHERE claim_id = ?', [id], (err, result) => {
+        db.query('DELETE FROM claims WHERE claim_id = ?', [id], async(err, result) => {
             if (err) return res.status(500).json({ error: 'Database deletion error', details: err });
+            // clear cache
+            await client.del('claims:all');
+            await client.del(`claims:${id}`);
             res.json({ message: 'Claim deleted successfully' });
         });
     });

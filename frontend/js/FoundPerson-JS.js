@@ -30,8 +30,8 @@ async function fetchFoundPersons() {
   }
 }
 
-const token = localStorage.getItem('token');
-const name = localStorage.getItem('name');
+const token = sessionStorage.getItem('token');
+const name = sessionStorage.getItem('name');
 const userCard = document.getElementById('userCard');
 
 if (token && name) {
@@ -52,8 +52,8 @@ if (token && name) {
 }
 
 function logout() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('name');
+  sessionStorage.removeItem('token');
+  sessionStorage.removeItem('name');
   window.location.reload();
 }
 

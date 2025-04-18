@@ -8,7 +8,8 @@ const foundPersonBtn = document.getElementById('found-person-btn');
 const reportBtn = document.getElementById('report-btn');
 const claimBtn = document.getElementById('claim-btn');
 
-const user_id = localStorage.getItem("user_id");
+const user_id = sessionStorage.getItem("user_id");
+console.log(user_id);
 
 document.addEventListener('DOMContentLoaded', missingPerson);
 

@@ -8,7 +8,14 @@ const client = require('../client');
 // Get all found persons
 router.get('/', async (req, res) => {
     try {
+        const cachedData = await client.get('found_persons');
+        
+        if (cachedData) {
+            return res.json(JSON.parse(cachedData));
+        }
+
       const [rows] = await db.query('SELECT * FROM found_persons')
+      await client.setEx('found_persons:all', 3600, JSON.stringify(rows));
       res.json(rows);
     } catch (error) {
       console.error('Error fetching found persons:', error.message);
@@ -19,11 +26,18 @@ router.get('/', async (req, res) => {
 // Get found person by ID
 router.get('/:id', (req, res) => {
     const { id } = req.params;
-    db.query('SELECT * FROM found_persons WHERE found_id = ?', [id], (err, result) => {
+
+    const cachedData = client.get(`found_persons:${id}`);
+    if (cachedData) {
+        return res.json(JSON.parse(cachedData));
+    }
+    db.query('SELECT * FROM found_persons WHERE found_id = ?', [id], async(err, result) => {
         if (err) return res.status(500).json({ error: 'Database query error', details: err });
         if (result.length === 0){
             return res.status(404).json({error : "Persons not found"})
-        }    
+        }
+
+        await client.setEx(`found_persons:${id}`, 3600, JSON.stringify(result[0]));
         res.json(result[0]);
     });
 });
@@ -44,6 +58,10 @@ router.post('/', verifyToken, uploadFound.single('photo_url'), async (req, res) 
         (user_id, found_location, found_date, description, photo_url)
         VALUES (?, ?, ?, ?, ?)
       `, [userId, found_location, found_date, description, photoPath]);
+
+      // Clear cache
+        await client.del('found_persons:all');
+        await client.del(`found_persons:${userId}`);
   
       res.status(201).json({ message: 'Found person report submitted successfully.' });
     } catch (err) {
@@ -86,17 +104,18 @@ router.put('/:id', (req, res) => {
         db.query(
             'UPDATE found_persons SET found_location=?, found_date=?, photo_url=?, description=?, status=? WHERE found_id=?',
             [updateFoundLocation, updateFoundDate, updatePhotoUrl, updateDescription, updateStatus, id],
-            (err, result) => {
+            async (err, result) => {
                 if (err) return res.status(500).json({error: 'Database update error', details: err});
                 if(result.affectedRows === 0){
                     return res.status(404).json({error: 'No change made to the found persons'});
                 }
+                      // Clear cache
+                await client.del('found_persons:all');
+                await client.del(`found_persons:${id}`);
                 res.json({message: ' Found person update successfully'});
             }
         );
-
-
-        });
+    });
 });
 
 
@@ -110,8 +129,12 @@ router.delete('/:id', (req, res) => {
             return res.status(404).json({ error: 'Found person not found' });
         }
 
-    db.query('DELETE FROM found_persons WHERE found_id = ?', [id], (err, result) => {
+    db.query('DELETE FROM found_persons WHERE found_id = ?', [id], async (err, result) => {
         if (err) return res.status(500).json({ error: 'Database deletion error', details: err });
+
+        // clear cache
+        await client.del('found_persons:all');
+        await client.del(`found_persons:${id}`);
         res.json({ message: 'Found person record deleted successfully' });
          });
     });

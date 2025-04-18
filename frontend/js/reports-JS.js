@@ -5,7 +5,7 @@ const missingPersonFormBtn = document.getElementById('missing-person-form-btn');
 const foundPersonFormBtn = document.getElementById('found-person-form-btn');
 
 document.addEventListener('DOMContentLoaded', () => {
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   if (!token) {
     alert('Kamu harus login terlebih dahulu.');
     window.location.href = '/frontend/login.html';
@@ -96,7 +96,7 @@ document.getElementById('missing-person-form').addEventListener('submit', async 
     // debug
     console.log(missingPersonData);
     
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     const missingPersonResult = await axios.post('http://localhost:5000/missing-persons', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -143,7 +143,7 @@ document.getElementById('found-person-form').addEventListener('submit', async fu
     // debug
     console.log(foundPersonData);
     
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     const foundPersonResult = await axios.post('http://localhost:5000/found-persons', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
