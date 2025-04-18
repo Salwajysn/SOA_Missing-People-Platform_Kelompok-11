@@ -4,6 +4,7 @@ const { uploadMissing } = require('../middleware/upload');
 const verifyToken = require('../middleware/verifyToken');
 const multer = require('multer');
 const db = require('../db');
+const client = require('../client');
 
 
 // Get all missing persons
@@ -127,5 +128,78 @@ router.delete('/:id', (req, res) => {
         });
     });
 });
+
+router.get('/logs/:id', async (req, res) => {
+    const id = req.params.id;
+    const redisKey = `missing_persons:${id}`;
+  
+    try {
+      const cachedData = await client.get(redisKey);
+      if (cachedData) {
+        return res.json(JSON.parse(cachedData));
+      }
+  
+      const [results] = await db.query('SELECT missing_id, full_name, status, created_at FROM missing_persons');
+  
+      if (results.length === 0) {
+        return res.json({ message: "You haven't reported any missing person yet." });
+      }
+  
+      await client.setEx(redisKey, 3600, JSON.stringify(results));
+      res.json(results);
+  
+    } catch (error) {
+      res.status(500).json({ error: 'Internal server error', details: error.message });
+    }
+  });
+
+  router.get('/details/:id', async (req, res) => {
+    const id = req.params.id;
+    const redisKey = `missing_person_detail:${id}`;
+
+    const query = `
+        SELECT 
+            missing_persons.full_name,
+            missing_persons.age,
+            missing_persons.gender,
+            missing_persons.height,
+            missing_persons.weight,
+            missing_persons.last_seen_location,
+            missing_persons.last_seen_date,
+            missing_persons.photo_url,
+            missing_persons.status AS missing_status,
+            missing_persons.created_at,
+            reports.description,
+            reports.report_date,
+            reports.status AS report_status
+        FROM missing_persons
+        LEFT JOIN reports ON missing_persons.missing_id = reports.missing_id
+        WHERE missing_persons.missing_id = ?;
+    `;
+
+    try {
+        // Cek Redis dulu
+        const cachedData = await client.get(redisKey);
+        if (cachedData) {
+            return res.json(JSON.parse(cachedData));
+        }
+
+        // Query pakai await
+        const [results] = await db.query(query, [id]);
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: "Missing person not found" });
+        }
+
+        // Cache ke Redis
+        await client.setEx(redisKey, 3600, JSON.stringify(results[0]));
+
+        res.json(results[0]);
+
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error', details: error.message });
+    }
+});
+  
 
 module.exports = router;

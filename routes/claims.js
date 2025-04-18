@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const client = require('../client');
 
 // Get all claims
 router.get('/', (req, res) => {
@@ -104,4 +105,71 @@ router.delete('/:id', (req, res) => {
     });
 });
 
+router.get('/logs/:id', async (req, res) => {
+    const id = req.params.id;
+    const redisKey = `claims:${id}`;
+  
+    try {
+      const cachedData = await client.get(redisKey);
+      if (cachedData) {
+        return res.json(JSON.parse(cachedData));
+      }
+  
+      const [results] = await db.query(
+        'SELECT claim_id, relationship, status, created_at FROM claims WHERE user_id = ?',
+        [id]
+      );
+  
+      if (results.length === 0) {
+        return res.json({ message: "You haven't reported any found person yet." });
+      }
+  
+      await client.setEx(redisKey, 3600, JSON.stringify(results));
+      res.json(results);
+  
+    } catch (error) {
+      console.error("Error fetching claims:", error);
+      res.status(500).json({ error: 'Internal server error', details: error.message });
+    }
+});
+
+router.get('/details/:id', async (req, res) => {
+    const id = req.params.id;
+    const redisKey = `claims:details:${id}`;
+
+    const query = `
+      SELECT
+          found_persons.found_location,
+          found_persons.description,
+          found_persons.status AS found_status,
+          found_persons.created_at AS found_date,
+          found_persons.photo_url AS found_photo_url,
+          claims.relationship,
+          claims.status AS claim_status,
+          claims.created_at AS claim_date,
+          claims.evidence_url AS claim_photo_url
+      FROM claims
+      LEFT JOIN found_persons ON claims.found_id = found_persons.found_id
+      WHERE claims.claim_id = ?;`;
+  
+    try {
+      const cachedData = await client.get(redisKey);
+      if (cachedData) {
+        return res.json(JSON.parse(cachedData));
+      }
+  
+      const [results] = await db.query(query, [id]);
+  
+      if (results.length === 0) {
+        return res.status(404).json({ error: "Claim not found" });
+      }
+  
+      await client.setEx(redisKey, 3600, JSON.stringify(results[0]));
+      res.json(results[0]);
+  
+    } catch (error) {
+      console.error("Error fetching claim details:", error);
+      res.status(500).json({ error: 'Internal server error', details: error.message });
+    }
+})
 module.exports = router;

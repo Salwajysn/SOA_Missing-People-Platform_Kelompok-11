@@ -3,6 +3,7 @@ const { uploadFound } = require('../middleware/upload');
 const verifyToken = require('../middleware/verifyToken');
 const router = express.Router();
 const db = require('../db');
+const client = require('../client');
 
 // Get all found persons
 router.get('/', async (req, res) => {
@@ -115,6 +116,79 @@ router.delete('/:id', (req, res) => {
          });
     });
 });
+
+router.get('/logs/:id', async (req, res) => {
+  const id = req.params.id;
+  const redisKey = `found_persons:${id}`;
+
+  try {
+      // Cek cache Redis
+      const cachedData = await client.get(redisKey);
+      if (cachedData) {
+          return res.json(JSON.parse(cachedData));
+      }
+
+      // Query ke database
+      const [results] = await db.query(
+          'SELECT found_id, found_location, status, created_at FROM found_persons WHERE user_id = ?',
+          [id]
+      );
+
+      if (results.length === 0) {
+          return res.json({ message: "You haven't reported any found person yet." });
+      }
+
+      // Simpan ke Redis dan kirim respons
+      await client.setEx(redisKey, 3600, JSON.stringify(results));
+      res.json(results);
+
+  } catch (error) {
+      res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+router.get('/details/:id', async (req, res) => {
+  const id = req.params.id;
+  const redisKey = `found_person_detail:${id}`;
+
+  const query = `
+      SELECT
+          found_persons.found_location,
+          found_persons.description,
+          found_persons.status AS found_status,
+          found_persons.created_at AS found_date,
+          found_persons.photo_url AS found_photo_url,
+          claims.relationship,
+          claims.status AS claim_status,
+          claims.created_at AS claim_date,
+          claims.evidence_url AS claim_photo_url
+      FROM found_persons
+      LEFT JOIN claims ON found_persons.found_id = claims.found_id
+      WHERE found_persons.found_id = ?;
+  `;
+
+  try {
+      const cachedData = await client.get(redisKey);
+      if (cachedData) {
+          return res.json(JSON.parse(cachedData));
+      }
+
+      // Query ke database
+      const [results] = await db.query(query, [id]);
+
+      if (results.length === 0) {
+          return res.status(404).json({ message: "Found person not found." });
+      }
+
+      // Simpan ke Redis dan kirim respons
+      await client.setEx(redisKey, 3600, JSON.stringify(results[0]));
+
+      res.json(results[0]);
+
+  } catch (error) {
+      res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+})
 
 
 module.exports = router;

@@ -20,7 +20,7 @@ document.getElementById("registerForm").addEventListener("submit", async functio
     }
 
     try {
-      const res = await fetch("/auth/register", {
+      const res = await fetch("http://localhost:5000/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, phone, password }),

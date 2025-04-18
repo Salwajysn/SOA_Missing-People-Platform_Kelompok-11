@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const client = require('../client');
 
 // Get all reports
 router.get('/', (req, res) => {
@@ -97,5 +98,78 @@ router.delete('/:id', (req, res) => {
         });
     });
 });
+
+router.get('/logs/:id', async (req, res) => {
+    const id = req.params.id;
+    const redisKey = `reports:${id}`;
+  
+    try {
+      const cachedData = await client.get(redisKey);
+      if (cachedData) {
+        return res.json(JSON.parse(cachedData));
+      }
+  
+      const [results] = await db.query(
+        'SELECT report_id, description, status, report_date FROM reports WHERE user_id = ?',
+        [id]
+      );
+  
+      if (results.length === 0) {
+        return res.json({ message: "You haven't submitted any report of missing person yet." });
+      }
+  
+      await client.setEx(redisKey, 3600, JSON.stringify(results));
+      res.json(results);
+  
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      res.status(500).json({ error: 'Internal server error', details: error.message });
+    }
+  });
+
+  router.get('/details/:id', async (req, res) => {
+    const id = req.params.id;
+    const redisKey = `report_detail:${id}`;
+
+    const query = `
+        SELECT
+            missing_persons.full_name,
+            missing_persons.age,
+            missing_persons.gender,
+            missing_persons.height,
+            missing_persons.weight,
+            missing_persons.last_seen_location,
+            missing_persons.last_seen_date,
+            missing_persons.photo_url,
+            missing_persons.status AS missing_status,
+            missing_persons.created_at,
+            reports.description,
+            reports.report_date,
+            reports.status AS report_status
+        FROM reports
+        LEFT JOIN missing_persons ON reports.missing_id = missing_persons.missing_id
+        WHERE report_id = ?`;
+
+    try {
+        const cachedData = await client.get(redisKey);
+        if (cachedData) {
+            return res.json(JSON.parse(cachedData));
+        }
+
+        const [results] = await db.query(query, [id]);
+        if (results.length === 0) {
+            return res.status(404).json({ error: 'Report not found' });
+        }
+
+        await client.setEx(redisKey, 3600, JSON.stringify(results[0]));
+        res.json(results[0]);
+
+    } catch (error) {
+        console.error('Error fetching report details:', error);
+        res.status(500).json({ error: 'Internal server error', details: error.message });
+    }
+})
+
+  
 
 module.exports = router;

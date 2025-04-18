@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Page</title>
+    <link rel="stylesheet" href="./css/detail.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <nav class="navbar">
+            <img src="img/logo.png" alt="Logo" class="logo">
+            <input type="text" placeholder="Search..." class="search-bar">
+            <ul class="nav-menu">
+                <li><a href="MissingPerson.html" class="nav-link">Missing</a></li>
+                <li><a href="FoundPerson.html" class="nav-link">Found</a></li>
+                <li><a href="Reports.html" class="nav-link">Reports</a></li>
+                <li><a href="Setting.html" class="nav-link">Settings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="card hidden" id="detail-missing-person">
+            <h2>Missing Person Details</h2>
+            <table>
+                <tbody>
+                    <tr>
+                        <td><strong>Full Name:</strong></td>
+                        <td><span id="full_name"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Age:</strong></td>
+                        <td><span id="age"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gender:</strong></td>
+                        <td><span id="gender"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Height:</strong></td>
+                        <td><span id="height"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Weight:</strong></td>
+                        <td><span id="weight"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Last Seen Location:</strong></td>
+                        <td><span id="last_seen_location"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Last Seen Date:</strong></td>
+                        <td><span id="last_seen_date"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status:</strong></td>
+                        <td><span id="status"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Submitted At:</strong></td>
+                        <td><span id="created_at"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Photo:</strong></td>
+                    </tr>
+                    <tr>
+                        <td><img class="img" id="photo_url" alt="Missing Person Photo"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+        
+        <section class="card hidden" id="detail-found-person">
+            <h1>Found Person Details</h1>
+            <table>
+                <tbody>
+                    <tr>
+                        <td><strong>found_location:</strong></td>
+                        <td><span id="found_location"></span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Description:</strong></td>
+                        <td><span id="description"></span></td>
+                   </tr>
+                     <tr>
+                         <td><strong>Status:</strong></td>
+                         <td><span id="status"></span></td>
+                     </tr>
+                     <tr>
+                         <td><strong>Submited At:</strong></td>
+                         <td><span id="created_at"></span></td>
+                     </tr>
+                     <tr>
+                         <td><strong>Photo:</strong></td>
+                    </tr>
+                    <tr>
+                         <td><img class="img" id="photo_url"></td>
+                     </tr>
+                 </tbody>
+            </table>
+        </section>
+
+        <section class="card hidden" id="detail-report">
+            <h2>Report Details</h2>
+            <table>
+                <tbody>
+                   <tr>
+                        <td><strong>Description:</strong></td>
+                        <td><span id="description"></span></td>
+                   </tr>
+                   <tr>
+                        <td><strong>Submitted At:</strong></td>
+                        <td><span id="report_created_at"></span></td>
+                   </tr>
+                    <tr>
+                        <td><strong>Status:</strong></td>
+                        <td><span id="report_status"></span></td>
+                    </tr>
+                </tbody>
+            </table>     
+        </section>
+        
+        <section class="card hidden" id="detail-claim">
+            <h1>Claim Details</h1>
+            <table>
+                <tbody>
+                    <tr>
+                         <td><strong>Relationship:</strong></td>
+                         <td><span id="relationship"></span></td>
+                    </tr>
+                    <tr>
+                         <td><strong>found_location:</strong></td>
+                         <td><span id="found_location"></span></td>
+                    </tr>
+                     <tr>
+                         <td><strong>Status:</strong></td>
+                         <td><span id="status"></span></td>
+                     </tr>
+                     <tr>
+                         <td><strong>Submited At:</strong></td>
+                         <td><span id="created_at"></span></td>
+                     </tr>
+                     <tr>
+                         <td><strong>Photo:</strong></td>
+                    </tr>
+                    <tr>
+                         <td><img id="photo_url" class="img"></td>
+                     </tr>
+                 </tbody>
+            </table>
+        </section>
+    </main>
+    <script src="./js/detailScript.js"></script>
+</body>
+</html>

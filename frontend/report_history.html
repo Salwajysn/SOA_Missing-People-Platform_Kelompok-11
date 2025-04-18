@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Page</title>
+    <link rel="stylesheet" href="./css/reportHistory.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <nav class="navbar">
+            <img src="img/logo.png" alt="Logo" class="logo">
+            <input type="text" placeholder="Search..." class="search-bar">
+            <ul class="nav-menu">
+                <li><a href="MissingPerson.html" class="nav-link">Missing</a></li>
+                <li><a href="FoundPerson.html" class="nav-link">Found</a></li>
+                <li><a href="Reports.html" class="nav-link">Reports</a></li>
+                <li><a href="Setting.html" class="nav-link">Settings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="layout">
+        <!-- SideBar -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="sidebar-item"><button id="missing-person-btn" class="sidebar-btn">Missing Person</button></li>
+                <li class="sidebar-item"><button id="found-person-btn" class="sidebar-btn">Found Person</button></li>
+                <li class="sidebar-item"><button id="report-btn" class="sidebar-btn">Report Missing Person</button></li>
+                <li class="sidebar-item"><button id="claim-btn" class="sidebar-btn">Claim Found Person</button></li>
+            </ul>
+        </aside>
+        
+        <main class="main-content">
+            <h1>Your Log</h1>
+            <!-- missing person form -->
+            <section class="table-container" id="missing-person-card">
+                <h3>Missing Person</h2>
+                <table id="missing-person-table">
+                    <thead>
+                        <tr>
+                            <th class="table-header">Name</th>
+                            <th class="table-header">Status</th>
+                            <th class="table-header">Sumbited at</th>
+                            <th class="table-header"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+            
+            <!-- found person form -->
+            <section class="table-container hidden" id="found-person-card">
+                <h3>Found Person</h2>
+                <table id="found-person-table">
+                    <thead>
+                        <tr>
+                            <th class="table-header">Found Location</th>
+                            <th class="table-header">Status</th>
+                            <th class="table-header">Sumbited at</th>
+                            <th class="table-header"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                
+            </section>
+            
+            <!-- report missing person form -->
+            <section class="table-container hidden" id="report-card">
+                <h3>Report Missing Person</h2>
+                <table id="report-table">
+                    <thead>
+                        <tr>
+                            <th class="table-header">Relationship</th>
+                            <th class="table-header">Status</th>
+                            <th class="table-header">Sumbited at</th>
+                            <th class="table-header"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                
+            </section>
+            
+            <!-- found missing person form -->
+            <section class="table-container hidden" id="claim-card">
+                <h3>Claim Found Person</h2>
+                <table id="claim-table">
+                    <thead>
+                        <tr>
+                            <th class="table-header">Name</th>
+                            <th class="table-header">Status</th>
+                            <th class="table-header">Sumbited at</th>
+                            <th class="table-header"></th>
+                        </tr>
+                    </thead>
+
+                    <tbody></tbody>
+                </table>
+
+            </section>
+        </main>
+    </div>
+    <script src="./js/reportHistoryScript.js"></script>
+</body>
+</html>
