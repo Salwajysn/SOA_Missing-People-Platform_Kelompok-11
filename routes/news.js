@@ -108,6 +108,7 @@ router.post('/', verifyToken, uploadNewsImage.single('image_url'), async (req, r
   console.log("File uploaded:", req.file);  // Menampilkan file gambar yang diupload
   console.log("Form fields:", req.body);  // Menampilkan data form yang dikirim
   console.log("Isi req.user =>", req.user); // DEBUG
+  console.log("User ID from token:", req.user?.user_id); // Debugging untuk memastikan user_id ada
   
   const { title, description, category, author } = req.body;
   
@@ -129,8 +130,8 @@ router.post('/', verifyToken, uploadNewsImage.single('image_url'), async (req, r
   try {
     // Menyimpan data berita ke database
     await db.query(
-      'INSERT INTO news (title, description, category, image_url, author) VALUES (?, ?, ?, ?, ?)',
-      [title, description, category, photoPath, author]
+      'INSERT INTO news (user_id, title, description, category, image_url, author) VALUES (?, ?, ?, ?, ?, ?)',
+      [userId, title, description, category, photoPath, author]
     );
     res.status(201).json({ message: 'News created successfully' });
   } catch (err) {
