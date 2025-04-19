@@ -4,11 +4,13 @@ const { uploadMissing } = require('../middleware/upload');
 const verifyToken = require('../middleware/verifyToken');
 const multer = require('multer');
 const db = require('../db');
-client = require('../client');
+const client = require('../client');
+const throttling = require('../middleware/throttling');
+const rateLimiter = require('../middleware/rateLimiting');
 
 
 // Get all missing persons
-router.get('/', async (req, res) => {
+router.get('/', throttling, async (req, res) => {
     try {
       const cachedData = await client.get('missing_persons:all');
 
@@ -24,7 +26,7 @@ router.get('/', async (req, res) => {
     }
   });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', throttling, async (req, res) => {
   const { id } = req.params;
 
   const cachedData = await client.get(`missing_persons:${id}`);
@@ -50,7 +52,7 @@ router.get('/:id', async (req, res) => {
 });  
 
 // Create new missing person in reports page
-router.post('/', verifyToken, uploadMissing.single('photo_url'), async (req, res) => {
+router.post('/', rateLimiter, verifyToken, uploadMissing.single('photo_url'), async (req, res) => {
   console.log("Isi req.user =>", req.user); // DEBUG
 
   const {
@@ -79,7 +81,7 @@ router.post('/', verifyToken, uploadMissing.single('photo_url'), async (req, res
 });
 
 // Update missing person details
-router.put('/:id', (req, res) => {
+router.put('/:id', rateLimiter, (req, res) => {
     const { id } = req.params;
     const { full_name, age, gender, height, weight, last_seen_location, last_seen_date, photo_url, status } = req.body;
 
@@ -154,7 +156,7 @@ router.delete('/:id', (req, res) => {
     });
 });
 
-router.get('/logs/:id', async (req, res) => {
+router.get('/logs/:id', throttling, async (req, res) => {
   const id = req.params.id;
   const redisKey = `missing_persons:${id}`;
 
@@ -178,7 +180,7 @@ router.get('/logs/:id', async (req, res) => {
   }
 });
 
-router.get('/details/:id', async (req, res) => {
+router.get('/details/:id', throttling, async (req, res) => {
   const id = req.params.id;
   const redisKey = `missing_person_detail:${id}`;
 
@@ -196,7 +198,8 @@ router.get('/details/:id', async (req, res) => {
           missing_persons.created_at,
           reports.description,
           reports.report_date,
-          reports.status AS report_status
+          reports.status AS report_status,
+          reports.photo_url AS report_photo_url
       FROM missing_persons
       LEFT JOIN reports ON missing_persons.missing_id = reports.missing_id
       WHERE missing_persons.missing_id = ?;

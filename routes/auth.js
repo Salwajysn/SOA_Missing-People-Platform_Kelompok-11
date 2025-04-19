@@ -6,6 +6,9 @@ const bcrypt = require('bcryptjs');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const passport = require('passport')
 require('dotenv').config();
+const rateLimiter = require('../middleware/rateLimiting');
+
+router.use(rateLimiter);
 
 // Login
 router.post('/login', async (req, res) => {

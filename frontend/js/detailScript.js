@@ -43,17 +43,18 @@ async function missingPerson(missingId) {
         missingPersonContainer.querySelector("#height").textContent = data.height;
         missingPersonContainer.querySelector("#weight").textContent = data.weight;
         missingPersonContainer.querySelector("#last_seen_location").textContent = data.last_seen_location;
-        missingPersonContainer.querySelector("#last_seen_date").textContent = data.last_seen_date;
+        missingPersonContainer.querySelector("#last_seen_date").textContent = data.last_seen_date.split("T")[0];
         missingPersonContainer.querySelector("#status").textContent = data.missing_status;
-        missingPersonContainer.querySelector("#created_at").textContent = data.created_at;
+        missingPersonContainer.querySelector("#created_at").textContent = data.created_at.split("T")[0];
         missingPersonContainer.querySelector("#photo_url").src = `http://localhost:5000/${data.photo_url}`;
         
         // Report Details
         
         if(data.report_status !== null) {
             reportContainer.querySelector("#description").textContent = data.description;
-            reportContainer.querySelector("#report_created_at").textContent = data.report_date;
+            reportContainer.querySelector("#report_created_at").textContent = data.report_date.split("T")[0];
             reportContainer.querySelector("#report_status").textContent = data.report_status;
+            reportContainer.querySelector("#photo_url").src = `http://localhost:5000/${data.report_photo_url}`;
         }else{
             const massage = document.createElement('p');
             massage.textContent = "No one has reported the missing person you submitted yet.";

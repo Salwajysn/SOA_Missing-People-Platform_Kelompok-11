@@ -3,9 +3,12 @@ const router = express.Router();
 const { reportMissing } = require('../middleware/upload');
 const verifyToken = require('../middleware/verifyToken');
 const db = require('../db');
+const throttling = require('../middleware/throttling');
+const rateLimiter = require('../middleware/rateLimiting');
+const client = require('../client');
 
 // Get all reports
-router.get('/', async (req, res) => {
+router.get('/', throttling, async (req, res) => {
     const cachedData = await client.get('reports:all');
     if (cachedData) {
         return res.json(JSON.parse(cachedData));
@@ -18,7 +21,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get report by ID
-router.get('/:id', async(req, res) => {
+router.get('/:id', throttling, async(req, res) => {
     const { id } = req.params;
 
     const cachedData = await client.get(`reports:${id}`);
@@ -37,7 +40,7 @@ router.get('/:id', async(req, res) => {
 });
 
 // POST /reports
-router.post('/', verifyToken, reportMissing.single('photo'), async (req, res) => {
+router.post('/', rateLimiter, verifyToken, reportMissing.single('photo'), async (req, res) => {
     const { user_id, missing_id, description } = req.body;
     const photo = req.file;
   
@@ -65,7 +68,7 @@ router.post('/', verifyToken, reportMissing.single('photo'), async (req, res) =>
   
 
 // Update report
-router.put('/:id', (req, res) => {
+router.put('/:id', rateLimiter, (req, res) => {
     const { id } = req.params;
     const { description, status } = req.body;
 
@@ -130,7 +133,7 @@ router.delete('/:id', (req, res) => {
     });
 });
 
-router.get('/logs/:id', async (req, res) => {
+router.get('/logs/:id', throttling, async (req, res) => {
     const id = req.params.id;
     const redisKey = `reports:${id}`;
   
@@ -158,7 +161,7 @@ router.get('/logs/:id', async (req, res) => {
     }
   });
 
-  router.get('/details/:id', async (req, res) => {
+  router.get('/details/:id',  async (req, res) => {
     const id = req.params.id;
     const redisKey = `report_detail:${id}`;
 

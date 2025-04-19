@@ -4,9 +4,11 @@ const db = require('../db');
 const { claimFound } = require('../middleware/upload');
 const verifyToken = require('../middleware/verifyToken');
 const client = require('../client');
+const rateLimiter = require('../middleware/rateLimiting');
+const throttling = require('../middleware/throttling');
 
 // Get all claims
-router.get('/', async(req, res) => {
+router.get('/', throttling, async(req, res) => {
     const cachedData = await client.get('claims:all');
     if (cachedData) {
         return res.json(JSON.parse(cachedData));
@@ -20,7 +22,7 @@ router.get('/', async(req, res) => {
 });
 
 // Get claim by ID
-router.get('/:id', async(req, res) => {
+router.get('/:id', throttling, async(req, res) => {
     const { id } = req.params;
     const cachedData = await client.get(`claims:${id}`);
     if (cachedData) {
@@ -38,7 +40,7 @@ router.get('/:id', async(req, res) => {
 });
 
 // POST /claims
-router.post('/', verifyToken, claimFound.single('photo'), async (req, res) => {
+router.post('/', rateLimiter, verifyToken, claimFound.single('photo'), async (req, res) => {
     const { user_id, found_id, description, relationship } = req.body;
     const photo = req.file;
 
@@ -67,7 +69,7 @@ router.post('/', verifyToken, claimFound.single('photo'), async (req, res) => {
 
 
 // Update claim
-router.put('/:id', (req, res) => {
+router.put('/:id', rateLimiter, (req, res) => {
     const { id } = req.params;
     const { relationship, evidence_url, found_location, status } = req.body;
 
@@ -164,7 +166,7 @@ router.get('/logs/:id', async (req, res) => {
     }
 });
 
-router.get('/details/:id', async (req, res) => {
+router.get('/details/:id', throttling, async (req, res) => {
     const id = req.params.id;
     const redisKey = `claims:details:${id}`;
 

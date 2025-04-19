@@ -4,9 +4,11 @@ const verifyToken = require('../middleware/verifyToken');
 const router = express.Router();
 const db = require('../db');
 const client = require('../client');
+const rateLimiter = require('../middleware/rateLimiting');
+const throttling = require('../middleware/throttling');
 
 // Get all found persons
-router.get('/', async (req, res) => {
+router.get('/', throttling, async (req, res) => {
     try {
       const cachedData = await client.get('found_persons');
         
@@ -24,7 +26,7 @@ router.get('/', async (req, res) => {
   });
 
 // Get found person by ID (with async/await)
-router.get('/:id', async (req, res) => {
+router.get('/:id', throttling, async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -47,7 +49,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new found person in reports page
-router.post('/', verifyToken, uploadFound.single('photo_url'), async (req, res) => {
+router.post('/', rateLimiter, verifyToken, uploadFound.single('photo_url'), async (req, res) => {
   console.log("Isi req.user =>", req.user); // DEBUG
     const { 
       found_location, found_date, description 
@@ -75,7 +77,7 @@ router.post('/', verifyToken, uploadFound.single('photo_url'), async (req, res) 
 
 
 // Update found person status
-router.put('/:id', (req, res) => {
+router.put('/:id', rateLimiter, (req, res) => {
     const { id } = req.params;
     const { found_location, found_date, photo_url, description, status } = req.body;
 
@@ -174,7 +176,7 @@ router.get('/logs/:id', async (req, res) => {
   }
 });
 
-router.get('/details/:id', async (req, res) => {
+router.get('/details/:id', throttling, async (req, res) => {
   const id = req.params.id;
   const redisKey = `found_person_detail:${id}`;
 
