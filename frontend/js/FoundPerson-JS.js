@@ -23,6 +23,11 @@ async function fetchFoundPersons() {
         <p><strong>Deskripsi:</strong> ${person.description}</p>
         <p>Status: <strong>${person.status}</strong></p>
       `;
+      
+      card.addEventListener("click", () => {
+        window.location.href = `FoundDetail.html?found_id=${person.found_id}`;
+      });
+
       container.appendChild(card);
     });
   } catch (error) {

@@ -8,11 +8,11 @@ const client = require('../client');
 // Get all found persons
 router.get('/', async (req, res) => {
     try {
-        const cachedData = await client.get('found_persons');
+      const cachedData = await client.get('found_persons');
         
-        if (cachedData) {
-            return res.json(JSON.parse(cachedData));
-        }
+      if (cachedData) {
+          return res.json(JSON.parse(cachedData));
+      }
 
       const [rows] = await db.query('SELECT * FROM found_persons')
       await client.setEx('found_persons:all', 3600, JSON.stringify(rows));
@@ -23,23 +23,27 @@ router.get('/', async (req, res) => {
     }
   });
 
-// Get found person by ID
-router.get('/:id', (req, res) => {
-    const { id } = req.params;
+// Get found person by ID (with async/await)
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
 
-    const cachedData = client.get(`found_persons:${id}`);
+  try {
+    const cachedData = await client.get(`found_persons:${id}`);
     if (cachedData) {
         return res.json(JSON.parse(cachedData));
     }
-    db.query('SELECT * FROM found_persons WHERE found_id = ?', [id], async(err, result) => {
-        if (err) return res.status(500).json({ error: 'Database query error', details: err });
-        if (result.length === 0){
-            return res.status(404).json({error : "Persons not found"})
-        }
+    const [rows] = await db.query('SELECT * FROM found_persons WHERE found_id = ?', [id]);
 
-        await client.setEx(`found_persons:${id}`, 3600, JSON.stringify(result[0]));
-        res.json(result[0]);
-    });
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Person not found' });
+    }
+
+    await client.setEx(`found_persons:${id}`, 3600, JSON.stringify(rows[0]));
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Database query error:', err);
+    res.status(500).json({ error: 'Database query error', details: err });
+  }
 });
 
 // Create new found person in reports page
@@ -58,10 +62,9 @@ router.post('/', verifyToken, uploadFound.single('photo_url'), async (req, res) 
         (user_id, found_location, found_date, description, photo_url)
         VALUES (?, ?, ?, ?, ?)
       `, [userId, found_location, found_date, description, photoPath]);
-
-      // Clear cache
-        await client.del('found_persons:all');
-        await client.del(`found_persons:${userId}`);
+       // Clear cache
+       await client.del('found_persons:all');
+       await client.del(`found_persons:${userId}`);
   
       res.status(201).json({ message: 'Found person report submitted successfully.' });
     } catch (err) {
@@ -104,18 +107,20 @@ router.put('/:id', (req, res) => {
         db.query(
             'UPDATE found_persons SET found_location=?, found_date=?, photo_url=?, description=?, status=? WHERE found_id=?',
             [updateFoundLocation, updateFoundDate, updatePhotoUrl, updateDescription, updateStatus, id],
-            async (err, result) => {
+            async(err, result) => {
                 if (err) return res.status(500).json({error: 'Database update error', details: err});
                 if(result.affectedRows === 0){
                     return res.status(404).json({error: 'No change made to the found persons'});
                 }
-                      // Clear cache
+                 // Clear cache
                 await client.del('found_persons:all');
-                await client.del(`found_persons:${id}`);
+                await client.del(`found_persons:${userId}`);
                 res.json({message: ' Found person update successfully'});
             }
         );
-    });
+
+
+        });
 });
 
 
@@ -129,12 +134,11 @@ router.delete('/:id', (req, res) => {
             return res.status(404).json({ error: 'Found person not found' });
         }
 
-    db.query('DELETE FROM found_persons WHERE found_id = ?', [id], async (err, result) => {
+    db.query('DELETE FROM found_persons WHERE found_id = ?', [id], async(err, result) => {
         if (err) return res.status(500).json({ error: 'Database deletion error', details: err });
-
-        // clear cache
-        await client.del('found_persons:all');
-        await client.del(`found_persons:${id}`);
+         // Clear cache
+         await client.del('found_persons:all');
+         await client.del(`found_persons:${userId}`);
         res.json({ message: 'Found person record deleted successfully' });
          });
     });
@@ -212,6 +216,5 @@ router.get('/details/:id', async (req, res) => {
       res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 })
-
 
 module.exports = router;

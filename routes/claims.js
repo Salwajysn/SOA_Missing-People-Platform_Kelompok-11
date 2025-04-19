@@ -1,11 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { claimFound } = require('../middleware/upload');
+const verifyToken = require('../middleware/verifyToken');
 const client = require('../client');
 
 // Get all claims
-router.get('/', (req, res) => {
-    const cachedData = client.get('claims:all');
+router.get('/', async(req, res) => {
+    const cachedData = await client.get('claims:all');
     if (cachedData) {
         return res.json(JSON.parse(cachedData));
     }
@@ -18,12 +20,13 @@ router.get('/', (req, res) => {
 });
 
 // Get claim by ID
-router.get('/:id', (req, res) => {
+router.get('/:id', async(req, res) => {
     const { id } = req.params;
-    const cachedData = client.get(`claims:${id}`);
+    const cachedData = await client.get(`claims:${id}`);
     if (cachedData) {
         return res.json(JSON.parse(cachedData));
     }
+    
     db.query('SELECT * FROM claims WHERE claim_id = ?', [id], async(err, result) => {
         if (err) return res.status(500).json({ error: 'Database query error', details: err });
         if (result.length === 0) {
@@ -34,26 +37,34 @@ router.get('/:id', (req, res) => {
     });
 });
 
-// Create new claim
-router.post('/', (req, res) => {
-    const { user_id, found_id, relationship, evidence_url, found_location, status } = req.body;
+// POST /claims
+router.post('/', verifyToken, claimFound.single('photo'), async (req, res) => {
+    const { user_id, found_id, description, relationship } = req.body;
+    const photo = req.file;
 
-    if (!user_id || !found_id || !relationship || !evidence_url || !found_location || !status) {
-        return res.status(400).json({ error: "All fields are required" });
+    if (!user_id || !found_id || !description || !relationship || !photo) {
+        return res.status(400).json({ message: 'Semua field wajib diisi.' });
     }
 
-    db.query(
-        'INSERT INTO claims (user_id, found_id, relationship, evidence_url, found_location, status) VALUES (?, ?, ?, ?, ?, ?)',
-        [user_id, found_id, relationship, evidence_url, found_location, status],
-        async(err, result) => {
-            if (err) return res.status(500).json({ error: 'Database insertion error', details: err });
-            // clear cache
-            await client.del('claims:all');
-            await client.del(`claims:${user_id}`);
-            res.json({ message: 'Claim created successfully', claimId: result.insertId });
-        }
-    );
+    try {
+        const photoUrl = `uploads/claim-found-photos/${photo.filename}`;
+        const status = 'pending';
+
+        await db.query(
+            `INSERT INTO claims (user_id, found_id, relationship, evidence_url, description, status) VALUES (?, ?, ?, ?, ?, ?)`,
+            [user_id, found_id, relationship, photoUrl, description, status]
+        );
+        // clear cache
+        await client.del('claims:all');
+        await client.del(`claims:${user_id}`);
+
+        res.status(201).json({ message: 'Klaim berhasil dikirim.' });
+    } catch (error) {
+        console.error('Error menyimpan klaim:', error);
+        res.status(500).json({ message: 'Gagal menyimpan klaim.' });
+    }
 });
+
 
 // Update claim
 router.put('/:id', (req, res) => {
@@ -192,4 +203,5 @@ router.get('/details/:id', async (req, res) => {
       res.status(500).json({ error: 'Internal server error', details: error.message });
     }
 })
+
 module.exports = router;

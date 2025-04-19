@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const { reportMissing } = require('../middleware/upload');
+const verifyToken = require('../middleware/verifyToken');
 const db = require('../db');
-const client = require('../client');
 
 // Get all reports
-router.get('/', (req, res) => {
-    const cachedData = client.get('reports:all');
+router.get('/', async (req, res) => {
+    const cachedData = await client.get('reports:all');
     if (cachedData) {
         return res.json(JSON.parse(cachedData));
     }
@@ -17,14 +18,15 @@ router.get('/', (req, res) => {
 });
 
 // Get report by ID
-router.get('/:id', (req, res) => {
+router.get('/:id', async(req, res) => {
     const { id } = req.params;
 
-    const cachedData = client.get(`reports:${id}`);
+    const cachedData = await client.get(`reports:${id}`);
     if (cachedData) {
         return res.json(JSON.parse(cachedData));
     }
-    db.query('SELECT * FROM reports WHERE report_id = ?', [id],async (err, result) => {
+
+    db.query('SELECT * FROM reports WHERE report_id = ?', [id], async(err, result) => {
         if (err) return res.status(500).json({ error: 'Database query error', details: err });
         if (result.length === 0) {
             return res.status(404).json({ error: "Report not found" });
@@ -34,25 +36,33 @@ router.get('/:id', (req, res) => {
     });
 });
 
-// Create new report
-router.post('/', (req, res) => {
-    const { user_id, missing_id, description, report_date, status } = req.body;
-    
-    if (!user_id || !missing_id || !description || !report_date || !status){
-        return res.status(404).json({error: "All field are required"})
+// POST /reports
+router.post('/', verifyToken, reportMissing.single('photo'), async (req, res) => {
+    const { user_id, missing_id, description } = req.body;
+    const photo = req.file;
+  
+    if (!user_id || !missing_id || !description || !photo) {
+      return res.status(400).json({ message: 'Semua field wajib diisi.' });
     }
-    
-    db.query('INSERT INTO reports (user_id, missing_id, description, report_date, status) VALUES (?, ?, ?, ?, ?)',
-        [user_id, missing_id, description, report_date, status],
-        async(err, result) => {
-            if (err) return res.status(500).json({ error: 'Database insertion error', details: err });
+  
+    try {
+      const photoUrl = `uploads/report-missing-photos/${photo.filename}`;
+  
+      await db.query(
+        `INSERT INTO reports (user_id, missing_id, description, photo_url, status) VALUES (?, ?, ?, ?, ?)`,
+        [user_id, missing_id, description, photoUrl, 'pending']
+      );
 
-            // clear cache
-            await client.del('reports:all'); 
-            await client.del(`reports:${user_id}`); 
-            res.json({ message: 'Report created successfully', reportId: result.insertId });
-        });
-});
+      // clear cache
+      await client.del('reports:all'); 
+      await client.del(`reports:${user_id}`); 
+      res.status(201).json({ message: 'Laporan berhasil disimpan.' });
+    } catch (error) {
+      console.error('Error menyimpan laporan:', error);
+      res.status(500).json({ message: 'Gagal menyimpan laporan.' });
+    }
+  });
+  
 
 // Update report
 router.put('/:id', (req, res) => {
@@ -83,17 +93,16 @@ router.put('/:id', (req, res) => {
         db.query(
             'UPDATE reports SET description=?, status=? WHERE report_id=?',
             [updatedDescription, updatedStatus, id],
-            async (err, result) => {
+            async(err, result) => {
                 if (err) return res.status(500).json({ error: 'Database update error', details: err });
 
                 if (result.affectedRows === 0) {
                     return res.status(400).json({ error: 'No changes made to the report' });
                 }
 
-                            // clear cache
+                // clear cache
                 await client.del('reports:all'); 
-                await client.del(`reports:${id}`); 
-
+                await client.del(`reports:${user_id}`); 
                 res.json({ message: 'Report updated successfully' });
             }
         );
@@ -115,7 +124,7 @@ router.delete('/:id', (req, res) => {
             if (err) return res.status(500).json({ error: 'Database deletion error', details: err });
             // clear cache
             await client.del('reports:all'); 
-            await client.del(`reports:${id}`); 
+            await client.del(`reports:${user_id}`); 
             res.json({ message: 'Report deleted successfully' });
         });
     });
@@ -167,7 +176,8 @@ router.get('/logs/:id', async (req, res) => {
             missing_persons.created_at,
             reports.description,
             reports.report_date,
-            reports.status AS report_status
+            reports.status AS report_status,
+            reports.photo_url AS report_photo_url
         FROM reports
         LEFT JOIN missing_persons ON reports.missing_id = missing_persons.missing_id
         WHERE report_id = ?`;
@@ -191,7 +201,5 @@ router.get('/logs/:id', async (req, res) => {
         res.status(500).json({ error: 'Internal server error', details: error.message });
     }
 })
-
-  
 
 module.exports = router;

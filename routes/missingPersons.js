@@ -4,7 +4,7 @@ const { uploadMissing } = require('../middleware/upload');
 const verifyToken = require('../middleware/verifyToken');
 const multer = require('multer');
 const db = require('../db');
-const client = require('../client');
+client = require('../client');
 
 
 // Get all missing persons
@@ -15,10 +15,8 @@ router.get('/', async (req, res) => {
       if (cachedData) {
         return res.json(JSON.parse(cachedData));
       }
-
       const [rows] = await db.query('SELECT * FROM missing_persons');
       await client.setEx('missing_persons:all', 3600, JSON.stringify(rows));
-
       res.json(rows);
     } catch (error) {
       console.error('Error fetching missing persons:', error.message);
@@ -26,21 +24,30 @@ router.get('/', async (req, res) => {
     }
   });
 
-// Get missing person by ID
-router.get('/:id', (req, res) => {
-    const { id } = req.params;
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
 
-    const cachedData = client.get(`missing_persons:${id}`);
+  const cachedData = await client.get(`missing_persons:${id}`);
 
-    db.query('SELECT * FROM missing_persons WHERE missing_id = ?', [id], async(err, result) => {
-        if (err) return res.status(500).json({ error: 'Database query error', details: err });
-        if (result.length === 0) {
-            return res.status(404).json({ error: "Missing person not found" });
-        }
-        await client.setEx(`missing_persons:${id}`, 3600, JSON.stringify(result[0]));
-        res.json(result[0]);
-    });
-});
+  if (cachedData) {
+    return res.json(JSON.parse(cachedData));
+  }
+  try {
+    console.log('Fetching missing person with ID:', id);
+    const [rows] = await db.query('SELECT * FROM missing_persons WHERE missing_id = ?', [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Missing person not found" });
+    }
+
+    console.log('Found person:', rows[0]);
+    await client.setEx(`missing_persons:${id}`, 3600, JSON.stringify(rows[0]));
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Error saat mengambil data:', err.message);
+    res.status(500).json({ error: 'Database query error', details: err });
+  }
+});  
 
 // Create new missing person in reports page
 router.post('/', verifyToken, uploadMissing.single('photo_url'), async (req, res) => {
@@ -61,11 +68,9 @@ router.post('/', verifyToken, uploadMissing.single('photo_url'), async (req, res
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [userId, full_name, age, gender, height, weight, last_seen_location, last_seen_date, photoPath]);
 
-
     // Clear cache
     await client.del(`missing_persons:${userId}`);
     await client.del('missing_persons:all');
-
     res.status(201).json({ message: 'Missing person report submitted successfully.' });
   } catch (err) {
     console.error(err);
@@ -115,7 +120,7 @@ router.put('/:id', (req, res) => {
         db.query(
             'UPDATE missing_persons SET full_name=?, age=?, gender=?, height=?, weight=?, last_seen_location=?, last_seen_date=?, photo_url=?, status=? WHERE missing_id=?',
             [updatedFullName, updatedAge, updatedGender, updateHeight, updateWeight, updatedLastSeenLocation, updatedLastSeenDate, updatedPhotoUrl, updatedStatus, id],
-            async (err, result) => {
+            async(err, result) => {
                 if (err) return res.status(500).json({ error: 'Database update error', details: err });
 
                 if (result.affectedRows === 0) {
@@ -125,7 +130,6 @@ router.put('/:id', (req, res) => {
                 // Clear cache
                 await client.del(`missing_persons:${userId}`);
                 await client.del('missing_persons:all');
-
                 res.json({ message: 'Missing person updated successfully' });
             }
         );
@@ -143,89 +147,83 @@ router.delete('/:id', (req, res) => {
             return res.status(404).json({ error: 'Missing person not found' });
         }
 
-        db.query('DELETE FROM missing_persons WHERE missing_id = ?', [id], async (err, result) => {
+        db.query('DELETE FROM missing_persons WHERE missing_id = ?', [id], (err, result) => {
             if (err) return res.status(500).json({ error: 'Database deletion error', details: err });
-
-            // Clear cache
-            await client.del(`missing_persons:${userId}`);
-            await client.del('missing_persons:all');
-
             res.json({ message: 'Missing person deleted successfully' });
         });
     });
 });
 
 router.get('/logs/:id', async (req, res) => {
-    const id = req.params.id;
-    const redisKey = `missing_persons:${id}`;
-  
-    try {
+  const id = req.params.id;
+  const redisKey = `missing_persons:${id}`;
+
+  try {
+    const cachedData = await client.get(redisKey);
+    if (cachedData) {
+      return res.json(JSON.parse(cachedData));
+    }
+
+    const [results] = await db.query('SELECT missing_id, full_name, status, created_at FROM missing_persons WHERE user_id = ?', [id]);
+
+    if (results.length === 0) {
+      return res.json({ message: "You haven't reported any missing person yet." });
+    }
+
+    await client.setEx(redisKey, 3600, JSON.stringify(results));
+    res.json(results);
+
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+router.get('/details/:id', async (req, res) => {
+  const id = req.params.id;
+  const redisKey = `missing_person_detail:${id}`;
+
+  const query = `
+      SELECT 
+          missing_persons.full_name,
+          missing_persons.age,
+          missing_persons.gender,
+          missing_persons.height,
+          missing_persons.weight,
+          missing_persons.last_seen_location,
+          missing_persons.last_seen_date,
+          missing_persons.photo_url,
+          missing_persons.status AS missing_status,
+          missing_persons.created_at,
+          reports.description,
+          reports.report_date,
+          reports.status AS report_status
+      FROM missing_persons
+      LEFT JOIN reports ON missing_persons.missing_id = reports.missing_id
+      WHERE missing_persons.missing_id = ?;
+  `;
+
+  try {
+      // Cek Redis dulu
       const cachedData = await client.get(redisKey);
       if (cachedData) {
-        return res.json(JSON.parse(cachedData));
+          return res.json(JSON.parse(cachedData));
       }
-  
-      const [results] = await db.query('SELECT missing_id, full_name, status, created_at FROM missing_persons WHERE user_id = ?', [id]);
-  
+
+      // Query pakai await
+      const [results] = await db.query(query, [id]);
+
       if (results.length === 0) {
-        return res.json({ message: "You haven't reported any missing person yet." });
+          return res.status(404).json({ error: "Missing person not found" });
       }
-  
-      await client.setEx(redisKey, 3600, JSON.stringify(results));
-      res.json(results);
-  
-    } catch (error) {
+
+      // Cache ke Redis
+      await client.setEx(redisKey, 3600, JSON.stringify(results[0]));
+
+      res.json(results[0]);
+
+  } catch (error) {
       res.status(500).json({ error: 'Internal server error', details: error.message });
-    }
-  });
-
-  router.get('/details/:id', async (req, res) => {
-    const id = req.params.id;
-    const redisKey = `missing_person_detail:${id}`;
-
-    const query = `
-        SELECT 
-            missing_persons.full_name,
-            missing_persons.age,
-            missing_persons.gender,
-            missing_persons.height,
-            missing_persons.weight,
-            missing_persons.last_seen_location,
-            missing_persons.last_seen_date,
-            missing_persons.photo_url,
-            missing_persons.status AS missing_status,
-            missing_persons.created_at,
-            reports.description,
-            reports.report_date,
-            reports.status AS report_status
-        FROM missing_persons
-        LEFT JOIN reports ON missing_persons.missing_id = reports.missing_id
-        WHERE missing_persons.missing_id = ?;
-    `;
-
-    try {
-        // Cek Redis dulu
-        const cachedData = await client.get(redisKey);
-        if (cachedData) {
-            return res.json(JSON.parse(cachedData));
-        }
-
-        // Query pakai await
-        const [results] = await db.query(query, [id]);
-
-        if (results.length === 0) {
-            return res.status(404).json({ error: "Missing person not found" });
-        }
-
-        // Cache ke Redis
-        await client.setEx(redisKey, 3600, JSON.stringify(results[0]));
-
-        res.json(results[0]);
-
-    } catch (error) {
-        res.status(500).json({ error: 'Internal server error', details: error.message });
-    }
+  }
 });
-  
 
 module.exports = router;

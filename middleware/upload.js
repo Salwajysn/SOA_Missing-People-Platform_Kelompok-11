@@ -48,10 +48,40 @@ const foundPersonStorage = multer.diskStorage({
   }
 });
 
+// Storage untuk report missing person
+const reportMissingStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = 'uploads/report-missing-photos';
+    ensureDirExist(dir);
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const filename = generateFilename(file.originalname);
+    cb(null, filename);
+  }
+});
+
+// Storage untuk report missing person
+const claimFoundStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = 'uploads/claim-found-photos';
+    ensureDirExist(dir);
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const filename = generateFilename(file.originalname);
+    cb(null, filename);
+  }
+});
+
 const uploadMissing = multer({ storage: missingPersonStorage });
 const uploadFound = multer({ storage: foundPersonStorage });
+const reportMissing = multer({ storage: reportMissingStorage });
+const claimFound = multer({ storage: claimFoundStorage });
 
 module.exports = {
   uploadMissing,
-  uploadFound
+  uploadFound,
+  reportMissing,
+  claimFound
 };

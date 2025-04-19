@@ -8,10 +8,12 @@
         const params = new URLSearchParams(window.location.search);
         const token = params.get('token');
         const name = params.get('name');
+        const userId = params.get('user_id');
       
         if (token && name) {
           localStorage.setItem('token', token);
           localStorage.setItem('name', name);
+          localStorage.setItem('user_id', userId);
           alert("Masuk dengan Google berhasil!");
           window.location.href = "MissingPerson.html";
         } else {

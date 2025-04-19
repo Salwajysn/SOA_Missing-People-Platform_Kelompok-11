@@ -16,6 +16,7 @@ async function fetchMissingPersons() {
     container.innerHTML = "";
 
     data.forEach((person) => {
+      console.log(person); // ← Cek apakah ada missing_id
       const card = document.createElement("div");
       card.className = "card";
       card.innerHTML = `
@@ -27,6 +28,11 @@ async function fetchMissingPersons() {
         <p><strong>Pada:</strong> ${new Date(person.last_seen_date).toISOString().split('T')[0]}</p>
         <p><strong>Status:</strong>${person.status}</p>
       `;
+
+      card.addEventListener("click", () => {
+        window.location.href = `MissingDetail.html?missing_id=${person.missing_id}`;
+      });
+
       container.appendChild(card);
     });
   } catch (error) {

@@ -33,7 +33,14 @@ router.post('/login', async (req, res) => {
       { expiresIn: '2h' }
     );
 
-    res.json({ token, user: { name: user.name, role: user.role, user_id : user.user_id } });
+    res.json({ 
+      token, 
+      user: { 
+        user_id: user.user_id, 
+        name: user.name, 
+        role: user.role 
+      } 
+    });    
 
   } catch (err) {
     console.error('Login error:', err);
@@ -118,8 +125,8 @@ router.get('/google/callback', passport.authenticate('google', {
   );
 
   // Solusi: redirect ke /frontend/... bukan langsung root
-  const encodedName = encodeURIComponent(user.name);  
-  res.redirect(`/frontend/oauth-success.html?token=${token}&name=${encodedName}`);
+  const encodedName = encodeURIComponent(user.name);
+  res.redirect(`/frontend/oauth-success.html?token=${token}&name=${encodedName}&user_id=${user.user_id}`);  
 });
 
 module.exports = router;

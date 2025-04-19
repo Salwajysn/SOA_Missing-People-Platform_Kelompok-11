@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Detail Orang Hilang</title>
+  <link rel="stylesheet" href="./css/FoundDetail-style.css">
+</head>
+<body>
+      <!-- Navbar -->
+  <header>
+    <nav class="navbar">
+      <img src="img/logo.png" alt="Logo" class="logo" />
+      <ul class="nav-menu">
+        <li><a href="MissingPerson.html" class="nav-link">Missing</a></li>
+        <li><a href="FoundPerson.html" class="nav-link">Found</a></li>
+        <li><a href="Reports.html" class="nav-link">Reports</a></li>
+        <li><a href="Setting.html" class="nav-link">Settings</a></li>
+      </ul>
+    </nav>
+  </header>
+  
+  <div id="detailContainer">
+    <!-- Detail akan dimuat dengan JS -->
+  </div>
+
+  <div id="reportSection">
+    <h2>Lapor Mengenal Orang</h2>
+    <form id="reportForm">
+      <div class="form-group">
+        <label for="description">Deskripsi</label>
+        <textarea id="description" placeholder="Tuliskan detail informasi..." required></textarea>
+      </div>
+  
+      <div class="form-group">
+        <label for="relationship">Relationship</label>
+        <input type="text" id="relationship" placeholder="Contoh: Kakak, Teman" required />
+      </div>
+  
+      <div class="form-group">
+        <label for="evidence">Bukti Foto (opsional)</label>
+        <input type="file" id="evidence" accept="image/*">
+      </div>
+  
+      <button type="submit">Kirim Laporan</button>
+    </form>
+  </div>
+  
+
+  <script src="./js/FoundDetail-JS.js"></script>
+</body>
+</html>

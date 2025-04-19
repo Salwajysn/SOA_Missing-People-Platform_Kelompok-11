@@ -88,3 +88,15 @@
   .settings-container button:hover {
     background-color: #0056b3;
   }
+
+  .history-btn{
+    margin-top: 1rem;
+    width: 100%;
+    padding: 12px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+  }

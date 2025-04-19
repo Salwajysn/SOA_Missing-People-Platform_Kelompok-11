@@ -1,5 +1,4 @@
 node_modules/
 folder-tree.md
 .env
-uploads/missing-person-photos/*
-uploads/found-person-photos/*
+uploads

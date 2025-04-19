@@ -1,0 +1,202 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+  }
+  
+  /* Header */
+  .navbar {
+    height: 15vh;
+    padding: 10px 5%;
+    background-color: #C3E4FF;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .logo {
+    height: 50px;
+  }
+  
+  .nav-menu {
+    list-style: none;
+    display: flex;
+    gap: 4em;
+    font-weight: bold;
+  }
+  
+  .nav-link {
+    text-decoration: none;
+    color: #000;
+  }
+  
+  /* Detail Container */
+  #detailContainer {
+    max-width: 800px;
+    background-color: white;
+    margin: 3em auto;
+    padding: 2em;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  #detailContainer h2 {
+    margin-bottom: 1em;
+    color: #007BFF;
+  }
+  
+  #detailContainer img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 1em;
+  }
+  
+  #detailContainer p {
+    margin: 0.5em 0;
+    font-size: 1em;
+    color: #333;
+  }
+  
+  /* Report Section */
+  #reportSection {
+    max-width: 800px;
+    background-color: white;
+    margin: 1em auto 3em auto;
+    padding: 2em;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  #reportSection h2 {
+    margin-bottom: 1em;
+    color: #FF6B6B;
+  }
+  
+  #reportForm {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  #reportForm textarea {
+    resize: vertical;
+    min-height: 100px;
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 1em;
+  }
+  
+  #reportForm input[type="file"] {
+    margin-bottom: 1em;
+  }
+  
+  #reportForm button {
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  #reportForm button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .navbar {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .nav-menu {
+      flex-direction: column;
+      gap: 1em;
+      margin-top: 1em;
+    }
+  
+    #detailContainer, #reportSection {
+      padding: 1em;
+      margin: 2em 1em;
+    }
+  }
+  
+  .detail-card {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 2em;
+    flex-wrap: wrap;
+  }
+  
+  .detail-img {
+    flex: 1 1 250px;
+    text-align: center;
+  }
+  
+  .detail-img img {
+    width: 100%;
+    max-width: 250px;
+    height: auto;
+    border-radius: 10px;
+    object-fit: cover;
+  }
+  
+  .detail-info {
+    flex: 2 1 400px;
+  }
+  
+  .detail-info h2 {
+    margin-bottom: 1em;
+    color: #007BFF;
+  }
+  
+  .status-missing {
+    color: red;
+    font-weight: bold;
+  }
+  
+  .status-found {
+    color: green;
+    font-weight: bold;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.5em;
+  }
+  
+  #reportForm label {
+    margin-bottom: 0.5em;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  #reportForm input[type="text"],
+  #reportForm input[type="file"],
+  #reportForm textarea {
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+  
+  #reportForm input[type="file"] {
+    padding: 8px 5px;
+    background-color: #fff;
+    cursor: pointer;
+    font-size: 0.95em;
+  }
+  

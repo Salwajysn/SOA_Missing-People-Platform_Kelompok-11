@@ -134,6 +134,8 @@ async function report(reportId) {
         reportContainer.querySelector("#description").textContent = data.description;
         reportContainer.querySelector("#report_created_at").textContent = data.report_date;
         reportContainer.querySelector("#report_status").textContent = data.report_status;
+        reportContainer.querySelector("#photo_url").src = `http://localhost:5000/${data.report_photo_url}`;
+        console.log(data);
     }catch(error) {
         console.error('Error fetching report details:', error);
     }
