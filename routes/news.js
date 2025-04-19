@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { uploadNewsImage } = require('../middleware/upload'); // Pastikan middleware import sudah benar
 const verifyToken = require('../middleware/verifyToken');
+const multer = require('multer');
 
 // GET semua berita
 router.get('/', async (req, res) => {
@@ -103,24 +104,33 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST berita baru (hanya membutuhkan token login, tidak perlu admin)
-router.post('/', verifyToken, uploadNewsImage.single('image'), async (req, res) => {
-  console.log("Isi req.user =>", req.user); // Debugging
-  console.log("File uploaded:", req.file); // Debugging
+router.post('/', verifyToken, uploadNewsImage.single('image_url'), async (req, res) => {
+  console.log("File uploaded:", req.file);  // Menampilkan file gambar yang diupload
+  console.log("Form fields:", req.body);  // Menampilkan data form yang dikirim
+  console.log("Isi req.user =>", req.user); // DEBUG
   
   const { title, description, category, author } = req.body;
   
   // Pastikan file gambar ada
-  const image_url = req.file ? `/uploads/news-photos/${req.file.filename}` : null;
-  console.log("Image URL:", image_url); // Debugging
+  if (!req.file) {
+    return res.status(400).json({ error: 'Image file is required' });
+  }
 
-  if (!title || !description || !category || !image_url || !author) {
+  // Ambil path file gambar setelah upload
+  const photoPath = req.file ? req.file.path : null;
+  const userId = req.user.user_id; // ← PERBAIKAN DI SINI
+  console.log("File image_url:", photoPath);  // Menampilkan path gambar yang disalin ke folder
+
+  // Validasi input form
+  if (!title || !description || !category || !author) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
   try {
+    // Menyimpan data berita ke database
     await db.query(
       'INSERT INTO news (title, description, category, image_url, author) VALUES (?, ?, ?, ?, ?)',
-      [title, description, category, image_url, author]
+      [title, description, category, photoPath, author]
     );
     res.status(201).json({ message: 'News created successfully' });
   } catch (err) {
