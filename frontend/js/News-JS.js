@@ -56,7 +56,8 @@ function renderCards(newsData, page = 1, sectionElement) {
 
   const cards = pageItems.map(item => `
     <div class="news-card" onclick="openModal('${encodeURIComponent(JSON.stringify(item))}')">
-      <img src="${item.image_url || PLACEHOLDER_IMAGE}" alt="${item.title}">
+      <!-- Gunakan item.image_url untuk menampilkan gambar -->
+      <img src="http://localhost:5000/${item.image_url}" alt="${item.title}">
       <div class="news-info">
         <h3>${item.title}</h3>
         <p>${item.description.slice(0, 80)}...</p>
@@ -119,7 +120,7 @@ function handleTabs(allData) {
 // Modal
 window.openModal = function (dataString) {
   const data = JSON.parse(decodeURIComponent(dataString));
-  document.getElementById('modal-image').src = data.image_url || PLACEHOLDER_IMAGE;
+  document.getElementById('modal-image').src = `http://localhost:5000/${data.image_url}`;
   document.getElementById('modal-title').textContent = data.title;
   document.getElementById('modal-author-date').textContent = `By: ${data.author || 'Unknown'} • ${new Date(data.created_at).toLocaleDateString()}`;
   document.getElementById('modal-description').textContent = data.description;
@@ -131,61 +132,87 @@ window.closeModal = function () {
   document.getElementById('newsModal').classList.add('hidden');
 };
 
-
-let currentEditingNews = null;
-
-function openModal(dataString) {
-  const data = JSON.parse(decodeURIComponent(dataString));
-  currentEditingNews = data;
-
-  document.getElementById('modal-image').src = data.image_url || PLACEHOLDER_IMAGE;
-  document.getElementById('modal-title').value = data.title;
-  document.getElementById('modal-description').value = data.description;
-  document.getElementById('modal-author-date').textContent = `By: ${data.author || 'Unknown'} • ${new Date(data.created_at).toLocaleDateString()}`;
-
-  document.getElementById('newsModal').classList.remove('hidden');
+// Fungsi untuk membuka modal tambah berita
+function openAddNewsModal() {
+  document.getElementById('addNewsModal').classList.remove('hidden');
 }
 
-function closeModal() {
-  document.getElementById('newsModal').classList.add('hidden');
-  currentEditingNews = null;
+// Fungsi untuk menutup modal tambah berita
+function closeAddNewsModal() {
+  document.getElementById('addNewsModal').classList.add('hidden');
 }
 
-async function handleUpdateNews() {
-  if (!currentEditingNews) return;
+// Fungsi untuk menambahkan news baru ke database dan muncul di halaman News
+async function submitNewNews() {
+  const title = document.getElementById('new-title').value.trim();
+  const author = document.getElementById('new-author').value.trim();
+  const category = document.getElementById('new-category').value;
+  const description = document.getElementById('new-description').value.trim();
+  const image_url = document.getElementById('new-image').files[0]; // Ambil file gambar
 
-  const updatedTitle = document.getElementById('modal-title').value.trim();
-  const updatedDescription = document.getElementById('modal-description').value.trim();
+  // Pastikan file gambar ada dan memiliki ekstensi yang valid
+  if (!image_url) {
+    alert('Harap pilih gambar.');
+    return;
+  }
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+  if (!allowedTypes.includes(image_url.type)) {
+    alert('Harap pilih gambar dengan format JPG, PNG, atau GIF.');
+    return;
+  }
+
+  // Validasi data
+  if (!title || !author || !category || !image_url || !description) {
+    alert("Semua field harus diisi.");
+    return;
+  }
+
+  const token = localStorage.getItem('token'); // Ambil token dari localStorage
+
+  if (!token) {
+    alert('Anda perlu login untuk menambahkan berita.');
+    window.location.href = 'login.html';  // Redirect ke halaman login
+    return;
+  }  
+
+console.log("Token yang dikirim:", token); // Log token untuk memeriksa apakah benar ada
+
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('author', author);
+  formData.append('category', category);
+  formData.append('description', description);
+  formData.append('image_url', image_url); // Pastikan gambar ada dalam formData
 
   try {
-    await axios.put(`${API_URL}/${currentEditingNews.news_id}`, {
-      title: updatedTitle,
-      description: updatedDescription,
-      image_url: currentEditingNews.image_url,
-      author: currentEditingNews.author,
-      category: currentEditingNews.category
+    const response = await axios.post('http://localhost:5000/news', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data', // Mengatur agar server tahu ini adalah form data
+        Authorization: `Bearer ${token}` // Menambahkan token pada header
+      }
     });
 
-    alert('Berita berhasil diperbarui.');
-    location.reload();
+    alert('Berita berhasil ditambahkan.');
+    location.reload(); // Reload halaman setelah berita berhasil ditambahkan
   } catch (err) {
-    console.error(err);
-    alert('Gagal memperbarui berita.');
+    console.error('Error submitting news:', err);
+    alert('Gagal menambahkan berita.');
   }
 }
 
-async function handleDeleteNewsFromModal() {
-  if (!currentEditingNews) return;
 
-  const confirmDelete = confirm('Apakah Anda yakin ingin menghapus berita ini?');
-  if (!confirmDelete) return;
-
-  try {
-    await axios.delete(`${API_URL}/${currentEditingNews.news_id}`);
-    alert('Berita berhasil dihapus.');
-    location.reload();
-  } catch (err) {
-    console.error(err);
-    alert('Gagal menghapus berita.');
+// Fungsi untuk menampilkan preview gambar yang dipilih
+function previewImage() {
+  const file = document.getElementById('new-image').files[0];
+  const reader = new FileReader();
+  
+  reader.onload = function(event) {
+    const imagePreview = document.getElementById('image-preview');
+    imagePreview.src = event.target.result;
+    imagePreview.style.display = 'block';  // Menampilkan gambar setelah dipilih
+  }
+  
+  if (file) {
+    reader.readAsDataURL(file);  // Membaca file gambar
   }
 }
