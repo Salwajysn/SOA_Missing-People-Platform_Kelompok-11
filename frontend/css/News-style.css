@@ -382,3 +382,54 @@ body {
   cursor: not-allowed;
   box-shadow: none;
 }
+
+.add-news-btn {
+  padding: 10px 20px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.add-news-btn:hover {
+  background-color: #1565c0;
+  opacity: 0.9;
+}
+
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+  width: 100%;
+  padding: 1em;
+  margin-bottom: 1em;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.modal-content button {
+  padding: 10px 20px;
+  background-color: #1565c0;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.modal-content button:hover {
+  background-color: #1565c0;
+}
+
+.modal-content .close-btn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 24px;
+  color: #444;
+  cursor: pointer;
+}
+
+.modal-content .close-btn:hover {
+  color: #000;
+}
