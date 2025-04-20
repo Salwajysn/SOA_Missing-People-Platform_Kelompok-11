@@ -11,7 +11,7 @@ https://www.scotland.police.uk/what-s-happening/missing-persons/
 ## 1. Installation
 1. Clone Repository
     ```
-    npm install --save midtrans-client
+    npm install
     ```
 2. Masuk ke Direkori
    ```
@@ -21,11 +21,12 @@ https://www.scotland.police.uk/what-s-happening/missing-persons/
    ```
    npm install
    ```
-4. Jalankan Backend
+4. Jalankan MySQL dan Redis
+5. Jalankan Backend
    ```
    npm run api
    ```
-5. Jalankan Live Server
+6. Jalankan Live Server
 ## 2. Features
 ### 2.a API CRUD
 * Users
