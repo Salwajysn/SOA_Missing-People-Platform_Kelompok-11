@@ -27,5 +27,5 @@ form.addEventListener('submit', async (e) => {
 });
 
 document.getElementById("googleLogin").addEventListener("click", () => {
-  window.location.href = "/auth/google";
+  window.location.href = "http://localhost:5000/auth/google";
 });

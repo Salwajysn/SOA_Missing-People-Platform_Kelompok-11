@@ -74,14 +74,29 @@ const claimFoundStorage = multer.diskStorage({
   }
 });
 
+// Storage untuk berita
+const newsStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = 'uploads/news-photos';
+    ensureDirExist(dir);
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const filename = generateFilename(file.originalname);
+    cb(null, filename);
+  }
+});
+
 const uploadMissing = multer({ storage: missingPersonStorage });
 const uploadFound = multer({ storage: foundPersonStorage });
 const reportMissing = multer({ storage: reportMissingStorage });
 const claimFound = multer({ storage: claimFoundStorage });
+const uploadNewsImage = multer({ storage: newsStorage });
 
 module.exports = {
   uploadMissing,
   uploadFound,
   reportMissing,
-  claimFound
+  claimFound,
+  uploadNewsImage
 };

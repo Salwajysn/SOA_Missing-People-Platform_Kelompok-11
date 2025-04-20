@@ -21,7 +21,7 @@ router.get('/', throttling, async (req, res) => {
 });
 
 // Get report by ID
-router.get('/:id', throttling, async(req, res) => {
+router.get('/:id', async(req, res) => {
     const { id } = req.params;
 
     const cachedData = await client.get(`reports:${id}`);
@@ -133,7 +133,7 @@ router.delete('/:id', (req, res) => {
     });
 });
 
-router.get('/logs/:id', throttling, async (req, res) => {
+router.get('/logs/:id', async (req, res) => {
     const id = req.params.id;
     const redisKey = `reports:${id}`;
   

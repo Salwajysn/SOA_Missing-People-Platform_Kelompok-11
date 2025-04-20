@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Language" content="id">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Berita Orang Hilang</title>
+  <link rel="stylesheet" href="./css/News-style.css">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+  <!-- MODAL -->
+  <div id="newsModal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <img id="modal-image" src="" alt="news image">
+      <h2 id="modal-title"></h2>
+      <p id="modal-author-date"></p>
+      <p id="modal-description"></p>
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <header>
+    <nav class="navbar">
+      <img src="img/logo.png" alt="Logo" class="logo" />
+      <input type="text" id="search-input" class="search-bar" placeholder="Cari berita orang hilang..." />
+      <ul class="nav-menu">
+        <li><a href="MissingPerson.html" class="nav-link">Missing</a></li>
+        <li><a href="FoundPerson.html" class="nav-link">Found</a></li>
+        <li><a href="News.html" class="nav-link">News</a></li>
+        <li><a href="Reports.html" class="nav-link">Reports</a></li>
+        <li><a href="Setting.html" class="nav-link">Settings</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- KONTEN UTAMA -->
+  <main class="main-content">
+    <div class="news-page-wrapper">
+      <!-- KANAN: HOT NEWS + TABS -->
+      <aside class="hot-news">
+        <h3>Hot News</h3>
+        <ul id="hot-news-list"></ul>
+        <div class="tab-menu left-tabs">
+          <button class="tab-btn active" data-tab="all-news">All News</button>
+          <button class="tab-btn" data-tab="missing-news">Missing Persons</button>
+          <button class="tab-btn" data-tab="found-news">Found Persons</button>
+        </div>
+      </aside>
+
+      <!-- KANAN: KONTEN BERITA -->
+      <div class="container">
+        <h1>Berita Terbaru</h1>
+
+        <!-- Tombol Add News -->
+        <div style="text-align: right;">
+          <button class="add-news-btn" onclick="openAddNewsModal()">+ Tambah Berita</button>
+        </div>
+        
+        <hr style="margin: 10px 0 30px; border: none; border-top: 1px solid #ccc;" />
+
+        <!-- SECTION SEMUA -->
+        <section class="tab-content" id="all-news">
+          <div class="card-grid" id="featured-news"></div>
+          <div class="pagination" id="pagination-all-news"></div>
+        </section>
+
+        <!-- SECTION FILTER -->
+        <section class="tab-content hidden" id="missing-news"></section>
+        <section class="tab-content hidden" id="found-news"></section>        
+      </div>
+    </div>
+  </main>
+
+<!-- Modal Add News -->
+<div id="addNewsModal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeAddNewsModal()">&times;</span>
+    <h2>Tambah Berita</h2>
+    <input type="text" id="new-title" class="modal-input" placeholder="Judul Berita">
+    <input type="text" id="new-author" class="modal-input" placeholder="Penulis">
+    <select id="new-category" class="modal-input">
+      <option value="missing">Missing</option>
+      <option value="found">Found</option>
+    </select>
+    <input type="file" id="new-image" class="modal-input" accept="image/*"> <!-- Input untuk memilih gambar -->
+    <textarea id="new-description" class="modal-textarea" placeholder="Deskripsi berita"></textarea>
+    <button onclick="submitNewNews()" class="add-news-btn">+ Tambah</button>
+  </div>
+</div>  
+  
+  <script src="./js/News-JS.js"></script>
+</body>
+</html>

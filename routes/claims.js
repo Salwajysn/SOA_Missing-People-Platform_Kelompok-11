@@ -22,7 +22,7 @@ router.get('/', throttling, async(req, res) => {
 });
 
 // Get claim by ID
-router.get('/:id', throttling, async(req, res) => {
+router.get('/:id', async(req, res) => {
     const { id } = req.params;
     const cachedData = await client.get(`claims:${id}`);
     if (cachedData) {
@@ -166,7 +166,7 @@ router.get('/logs/:id', async (req, res) => {
     }
 });
 
-router.get('/details/:id', throttling, async (req, res) => {
+router.get('/details/:id', async (req, res) => {
     const id = req.params.id;
     const redisKey = `claims:details:${id}`;
 

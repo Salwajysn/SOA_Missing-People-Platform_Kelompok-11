@@ -9,7 +9,6 @@ const multer = require('multer');
 
 require('dotenv').config();
 
-
 // Import routes
 const verifyToken = require('./middleware/verifyToken');
 const userRoutes = require('./routes/users');
@@ -20,6 +19,7 @@ const claimRoutes = require('./routes/claims');
 const notificationRoutes = require('./routes/notifications');
 const passport = require('passport');
 const upload = multer({ dest: 'uploads/' });
+const newsRoutes = require('./routes/news');
 
 // Gunakan routes
 app.use(cors());
@@ -37,6 +37,7 @@ app.use('/reports', reportRoutes);
 app.use('/claims', claimRoutes);
 app.use('/found-persons', foundPersonRoutes);
 app.use('/notifications', notificationRoutes);
+app.use('/news', newsRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

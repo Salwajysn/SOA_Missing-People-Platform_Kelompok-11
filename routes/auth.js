@@ -88,6 +88,10 @@ passport.use(new GoogleStrategy({
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     const email = profile.emails[0].value;
+    if (!email) {
+      console.error("❌ Email dari Google tidak tersedia:", profile);
+      return done(new Error("Email tidak tersedia dari Google"), null);
+    }
     const name = profile.displayName;
 
     const [existingUser] = await db.query("SELECT * FROM users WHERE email = ?", [email]);

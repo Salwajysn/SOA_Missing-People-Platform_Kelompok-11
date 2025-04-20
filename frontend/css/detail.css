@@ -34,42 +34,30 @@ body{
 
 
 /* ||   Header */
-.navbar{
-    height: 10vh;
+.navbar {
+    height: 15vh;
     padding: 10px 5%;
     background-color: #C3E4FF;
     display: flex;
     align-items: center;
     justify-content: space-between;
-}
-
-.logo{
-    max-height: 100%;
-}
-
-.search-bar{
-    display: flex;
-    height: 80%;
-    width: 25%;
-    background-color: #fff;
-    border: none;
-    color: #000;
-    padding: 1em;
-    border-radius: 8px;
-    outline: none;
-}
-
-.nav-menu{
+  }
+  
+  .logo {
+    height: 50px;
+  }
+  
+  .nav-menu {
     list-style: none;
     display: flex;
-    align-items: center;
-    gap: 2em;
-}
-
-.nav-link{  
+    gap: 4em;
+    font-weight: bold;
+  }
+  
+  .nav-link {
     text-decoration: none;
     color: #000;
-}
+  }
 
 /* Side Bar */
 .sidebar{
